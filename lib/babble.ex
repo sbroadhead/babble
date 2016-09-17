@@ -5,6 +5,8 @@ defmodule Babble do
     import Supervisor.Spec
 
     children = [
+      supervisor(Babble.Registry, []),
+
       supervisor(Babble.Repo, []),
       supervisor(Babble.Endpoint, [])
     ]
