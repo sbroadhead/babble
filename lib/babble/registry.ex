@@ -53,7 +53,11 @@ defmodule Babble.Registry do
     do: {:noreply, Map.delete(registry, key)}
 
   def handle_info({:DOWN, _, :process, pid, _}, registry) do
-    {key, ^pid} = Map.to_list(registry) |> Enum.find(fn {_, ^pid} -> true end)
+    {key, ^pid} = Map.to_list(registry)
+                |> Enum.find(fn
+                     {_, ^pid}  -> true
+                     _          -> false
+                   end)
     {:noreply, Map.delete(registry, key)}
   end
 
