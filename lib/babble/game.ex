@@ -79,7 +79,7 @@ defmodule Babble.Game do
   def handle_call(:players, _from, %State{players: players} = state),
     do: {:reply, players |> Enum.map(fn {username, _} -> username end), state}
 
-  def handle_call(message, _from, state), do
+  def handle_call(message, _from, state),
     do: {:reply, {:error, {:unknown_message, message}}, state}
 
   def handle_info({:DOWN, _, :process, pid, _}, %State{players: players} = state) do
