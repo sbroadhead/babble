@@ -4,8 +4,11 @@ defmodule Babble do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    time_source = Application.get_env :babble, :time_source, Babble.Time.RealTime
+
     children = [
       supervisor(Babble.Registry, []),
+      supervisor(Babble.Time, [time_source]),
 
       supervisor(Babble.Repo, []),
       supervisor(Babble.Endpoint, [])

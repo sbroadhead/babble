@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :babble,
+  time_source: Babble.Time.FakeTime
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :babble, Babble.Endpoint,
