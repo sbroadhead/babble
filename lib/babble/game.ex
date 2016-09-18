@@ -23,8 +23,18 @@ defmodule Babble.Game do
     The state of a lobby instance.
     """
     defstruct options:    nil,      # The `Options` that this lobby was created with
-              players:    [],       # A list of pids representing the players in this lobby
-              blacklist:  []        # A list of blacklisted usernames
+              players:    %{},      # A map of players in this lobby
+              blacklist:  [],       # A list of blacklisted usernames
+              round:      1         # The round number
+  end
+
+  defmodule PlayerState do
+    @moduledoc """
+    The state of a player in this lobby.
+    """
+    defstruct sentence:   "",       # The currently submitted sentence for this player
+              score:      0,        # The player's current score
+              pid:        nil       # The PID of this player's process
   end
 
   # Public API
@@ -43,7 +53,8 @@ defmodule Babble.Game do
     case Enum.find(blacklist, &(&1 == username)) do
       nil ->
         monitor = Process.monitor(player)
-        new_state = %State{state | players: [{player, monitor} | players]}
+        player_state = %PlayerState{pid: player}
+        new_state = %State{state | players: Map.put(players, username, player_state)}
         {:reply, :ok, new_state}
       _ ->
         {:reply, {:error, {:blacklisted, username}}, state}
@@ -52,9 +63,13 @@ defmodule Babble.Game do
   end
 
   def handle_call(:leave, {player, _}, %State{players: players} = state) do
-    case Enum.find(players, fn {pid, _} -> pid == player end) do
-      {pid, _} ->
-        new_state = %State{state | players: players |> Enum.filter(fn {x, _} -> x != pid end)}
+    case Enum.find(players, fn {_, %PlayerState{pid: pid}} -> pid == player end) do
+      {_, %PlayerState{pid: pid}} ->
+        new_state = %State{state |
+          players: players
+            |> Enum.filter(fn {_, %PlayerState{pid: x}} -> x != pid end)
+            |> Enum.into(Map.new)
+        }
         {:reply, :ok, new_state}
       _ ->
         {:reply, {:error, :not_joined}, state}
@@ -62,11 +77,15 @@ defmodule Babble.Game do
   end
 
   def handle_call(:players, _from, %State{players: players} = state),
-    do: {:reply, players |> Enum.map(fn {pid, _} -> pid end), state}
+    do: {:reply, players |> Enum.map(fn {username, _} -> username end), state}
 
 
   def handle_info({:DOWN, _, :process, pid, _}, %State{players: players} = state) do
-    new_state = %State{state | players: players |> Enum.filter(fn {p, _} -> p != pid end)}
+    new_state = %State{state |
+      players: players
+        |> Enum.filter(fn {_, %PlayerState{pid: x}} -> x != pid end)
+        |> Enum.into(Map.new)
+    }
     {:noreply, new_state}
   end
 end

@@ -15,9 +15,9 @@ defmodule Babble.GameTest do
     :ok = Player.join player2, game
     assert Player.game(player1) == game
     assert Player.game(player2) == game
-    assert Game.players(game) == [player2, player1]
+    assert Enum.sort(Game.players(game)) == ["user1", "user2"]
     Player.stop player1
-    assert Game.players(game) == [player2]
+    assert Game.players(game) == ["user2"]
     Player.leave player2
     assert Game.players(game) == []
     assert Player.game(player2) == nil
