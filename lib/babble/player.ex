@@ -15,18 +15,20 @@ defmodule Babble.Player do
 
   def stop(player), do: GenServer.stop player
   def name(player), do: GenServer.call player, :name
+  def game(player), do: GenServer.call player, :game
   def join(player, game) when is_pid(game), do: GenServer.call player, {:join, game}
   def leave(player), do: GenServer.call player, :leave
   def pid(username), do: Registry.whereis_name {:user, username}
 
   # GenServer implementation
-  def handle_call(:name, _from, %State{name: name} = state) do
-    {:reply, name, state}
-  end
+  def handle_call(:name, _from, %State{name: name} = state),
+    do: {:reply, name, state}
 
-  def handle_call(:leave, _from, %State{game: nil} = state) do
-    {:reply, {:error, :not_joined}, state}
-  end
+  def handle_call(:game, _from, %State{game: game} = state),
+    do: {:reply, game, state}
+
+  def handle_call(:leave, _from, %State{game: nil} = state),
+    do: {:reply, {:error, :not_joined}, state}
 
   def handle_call(:leave, _from, %State{game: game} = state) do
     case Game.leave game do

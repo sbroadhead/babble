@@ -13,11 +13,14 @@ defmodule Babble.GameTest do
     {:ok, player2} = Player.start_link "user2"
     :ok = Player.join player1, game
     :ok = Player.join player2, game
+    assert Player.game(player1) == game
+    assert Player.game(player2) == game
     assert Game.players(game) == [player2, player1]
     Player.stop player1
     assert Game.players(game) == [player2]
     Player.leave player2
     assert Game.players(game) == []
+    assert Player.game(player2) == nil
   end
 
   test "players can be blacklisted from games" do
